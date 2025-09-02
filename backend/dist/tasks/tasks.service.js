@@ -42,11 +42,17 @@ let TasksService = class TasksService {
     }
     async update(id, updateTaskDto) {
         const task = await this.findOne(id);
-        const updateData = { ...updateTaskDto };
-        if (updateData.dueDate) {
-            updateData.dueDate = new Date(updateData.dueDate);
+        if (updateTaskDto.name !== undefined)
+            task.name = updateTaskDto.name;
+        if (updateTaskDto.description !== undefined)
+            task.description = updateTaskDto.description;
+        if (updateTaskDto.status !== undefined)
+            task.status = updateTaskDto.status;
+        if (updateTaskDto.priority !== undefined)
+            task.priority = updateTaskDto.priority;
+        if (updateTaskDto.progress !== undefined) {
+            task.progress = Math.max(0, Math.min(100, updateTaskDto.progress));
         }
-        Object.assign(task, updateData);
         return await this.tasksRepository.save(task);
     }
     async remove(id) {

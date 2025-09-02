@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Button } from '@/components/ui'
+
 interface Props {
   show: boolean
   title: string
@@ -18,17 +20,6 @@ const emit = defineEmits<{
   confirm: []
   cancel: []
 }>()
-
-const getTypeClasses = () => {
-  switch (props.type) {
-    case 'danger':
-      return 'bg-red-600 hover:bg-red-700'
-    case 'info':
-      return 'bg-blue-600 hover:bg-blue-700'
-    default:
-      return 'bg-yellow-600 hover:bg-yellow-700'
-  }
-}
 </script>
 
 <template>
@@ -52,21 +43,18 @@ const getTypeClasses = () => {
       <p class="text-gray-700 mb-6">{{ message }}</p>
       
       <div class="flex justify-end space-x-3">
-        <button 
+        <Button 
+          variant="secondary"
           @click="emit('cancel')"
-          class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
         >
           {{ cancelText }}
-        </button>
-        <button 
+        </Button>
+        <Button 
+          :variant="type === 'danger' ? 'danger' : type === 'info' ? 'primary' : 'warning'"
           @click="emit('confirm')"
-          :class="[
-            'px-4 py-2 text-white rounded-md transition-colors',
-            getTypeClasses()
-          ]"
         >
           {{ confirmText }}
-        </button>
+        </Button>
       </div>
     </div>
   </div>

@@ -1,4 +1,13 @@
-import { IsString, IsOptional, IsEnum, IsDateString, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  MaxLength,
+  IsNumber,
+  Min,
+  Max,
+} from 'class-validator';
 import { TaskStatus, TaskPriority } from '../entities/task.entity';
 
 export class CreateTaskDto {
@@ -21,4 +30,18 @@ export class CreateTaskDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  estimatedHours?: string;
+
+  @IsOptional()
+  @IsDateString()
+  timeSpent?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  progress?: number;
 }

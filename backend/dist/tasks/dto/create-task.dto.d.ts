@@ -5,4 +5,7 @@ export declare class CreateTaskDto {
     status?: TaskStatus;
     priority?: TaskPriority;
     dueDate?: string;
+    estimatedHours?: string;
+    timeSpent?: string;
+    progress?: number;
 }

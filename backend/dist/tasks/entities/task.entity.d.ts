@@ -17,6 +17,11 @@ export declare class Task {
     status: TaskStatus;
     priority: TaskPriority;
     dueDate: Date;
+    estimatedHours: Date;
+    timeSpent: Date;
+    startedAt: Date;
+    completedAt: Date;
+    progress: number;
     createdAt: Date;
     updatedAt: Date;
 }

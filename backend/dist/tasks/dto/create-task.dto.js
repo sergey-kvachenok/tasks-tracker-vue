@@ -18,6 +18,9 @@ class CreateTaskDto {
     status;
     priority;
     dueDate;
+    estimatedHours;
+    timeSpent;
+    progress;
 }
 exports.CreateTaskDto = CreateTaskDto;
 __decorate([
@@ -45,4 +48,21 @@ __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], CreateTaskDto.prototype, "dueDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateTaskDto.prototype, "estimatedHours", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateTaskDto.prototype, "timeSpent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(100),
+    __metadata("design:type", Number)
+], CreateTaskDto.prototype, "progress", void 0);
 //# sourceMappingURL=create-task.dto.js.map

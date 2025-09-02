@@ -36,15 +36,42 @@ export class TasksService {
   async update(id: number, updateTaskDto: UpdateTaskDto): Promise<Task> {
     const task = await this.findOne(id);
     
-    // Create a new object to avoid mutating the DTO
-    const updateData: any = { ...updateTaskDto };
+    // Store original status to detect changes
+    const originalStatus = task.status;
     
-    // Convert string date to Date object if provided
-    if (updateData.dueDate) {
-      updateData.dueDate = new Date(updateData.dueDate);
+    // Update basic fields
+    if (updateTaskDto.name !== undefined) task.name = updateTaskDto.name;
+    if (updateTaskDto.description !== undefined) task.description = updateTaskDto.description;
+    if (updateTaskDto.status !== undefined) task.status = updateTaskDto.status;
+    if (updateTaskDto.priority !== undefined) task.priority = updateTaskDto.priority;
+    if (updateTaskDto.progress !== undefined) {
+      task.progress = Math.max(0, Math.min(100, updateTaskDto.progress));
     }
     
-    Object.assign(task, updateData);
+    // Handle date fields
+    if (updateTaskDto.dueDate !== undefined) {
+      task.dueDate = new Date(updateTaskDto.dueDate);
+    }
+    if (updateTaskDto.estimatedHours !== undefined) {
+      task.estimatedHours = updateTaskDto.estimatedHours;
+    }
+    if (updateTaskDto.timeSpent !== undefined) {
+      task.timeSpent = updateTaskDto.timeSpent;
+    }
+    
+    // Auto-manage startedAt and completedAt based on status changes
+    if (updateTaskDto.status && updateTaskDto.status !== originalStatus) {
+      if (updateTaskDto.status === 'in_progress' && !task.startedAt) {
+        task.startedAt = new Date();
+      }
+      if (updateTaskDto.status === 'completed') {
+        task.completedAt = new Date();
+      } else {
+        // Clear completedAt if status is not completed
+        task.completedAt = null;
+      }
+    }
+    
     return await this.tasksRepository.save(task);
   }
 

@@ -1,55 +1,24 @@
 <script setup lang="ts">
-import { ref, onBeforeMount } from 'vue'
+import { ref, onBeforeMount, watch, nextTick } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import ConfirmationDialog from '@/components/ConfirmationDialog.vue'
+import TaskEditModal from '@/components/TaskEditModal.vue'
+import TaskCard from '@/components/TaskCard.vue'
+import { Button, LoadingSpinner, EmptyState } from '@/components/ui'
 import { API_URLS } from '@/config/api'
-
-interface Task {
-  id: number
-  name: string
-  description?: string
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  dueDate?: string
-  createdAt: string
-  updatedAt: string
-}
+import type { Task } from '@/types/task'
 
 const router = useRouter()
 const tasks = ref<Task[]>([])
-const newTask = ref<string>('')
 const loading = ref<boolean>(true)
 const showConfirmDialog = ref(false)
 const pendingNavigation = ref<string | null>(null)
 const allowNavigation = ref<boolean>(false)
+const showEditModal = ref(false)
+const editingTask = ref<Task | null>(null)
+const showAddModal = ref(false)
 
-const addTask = async (): Promise<void> => {
-  if (newTask.value.trim()) {
-    try {
-      const response = await fetch(API_URLS.TASKS.CREATE, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: newTask.value.trim(),
-          status: 'pending',
-          priority: 'medium'
-        })
-      })
-      
-      if (response.ok) {
-        const newTaskData = await response.json()
-        tasks.value.unshift(newTaskData) // Add to beginning of list
-        newTask.value = ''
-      } else {
-        console.error('Failed to create task')
-      }
-    } catch (error) {
-      console.error('Error creating task:', error)
-    }
-  }
-}
+
 
 const deleteTask = async (id: number): Promise<void> => {
   try {
@@ -67,13 +36,94 @@ const deleteTask = async (id: number): Promise<void> => {
   }
 }
 
+const editTask = (task: Task): void => {
+  editingTask.value = task
+  showEditModal.value = true
+}
+
+const updateTask = async (taskData: Partial<Task>): Promise<void> => {
+  console.log('updateTask function called with data:', taskData)
+  console.log('editingTask.value:', editingTask.value)
+  
+  if (!editingTask.value) {
+    console.error('No editing task found')
+    return
+  }
+  
+  try {
+    const response = await fetch(API_URLS.TASKS.UPDATE(editingTask.value.id), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskData)
+    })
+    
+    if (response.ok) {
+      const updatedTask = await response.json()
+      
+      const index = tasks.value.findIndex(task => task.id === updatedTask.id)
+      if (index !== -1) {
+        const currentTask = tasks.value[index]
+        console.log('Before update - Task progress:', currentTask?.progress)
+        console.log('Updated task data:', updatedTask)
+        
+        // Create a completely new array with the updated task
+        const newTasks = tasks.value.map((task, i) => 
+          i === index ? { ...updatedTask } : { ...task }
+        )
+        
+        console.log('New tasks array before assignment:', newTasks.map(t => ({ id: t.id, progress: t.progress })))
+        
+        // Replace the entire array to ensure Vue reactivity
+        tasks.value = newTasks
+        
+        console.log('After update - Task progress:', tasks.value[index]?.progress)
+        console.log('Tasks array after assignment:', tasks.value.map(t => ({ id: t.id, progress: t.progress })))
+        
+        // Close the modal after successful update
+        showEditModal.value = false
+        editingTask.value = null
+      } else {
+        console.error('Task not found in local state for update')
+      }
+    } else {
+      const errorText = await response.text()
+      console.error('Failed to update task:', response.status, errorText)
+    }
+  } catch (error) {
+    console.error('Error updating task:', error)
+  }
+}
+
+const addNewTask = async (taskData: Partial<Task>): Promise<void> => {
+  try {
+    const response = await fetch(API_URLS.TASKS.CREATE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskData)
+    })
+    
+    if (response.ok) {
+      const newTaskData = await response.json()
+      tasks.value.unshift(newTaskData)
+    } else {
+      console.error('Failed to create task')
+    }
+  } catch (error) {
+    console.error('Error creating task:', error)
+  }
+}
+
 const navigateToTaskDetails = (id: number): void => {
   router.push(`/tasks/${id}`)
 }
 
 // Check if there are unsaved changes
 const hasUnsavedChanges = (): boolean => {
-  return newTask.value.trim() !== ''
+  return false // No more simple input field, all changes go through modals
 }
 
 onBeforeRouteLeave((to, from) => {
@@ -100,8 +150,6 @@ const confirmNavigation = (): void => {
   allowNavigation.value = true
   
   if (pendingNavigation.value) {
-    // Clear the input to allow navigation
-    newTask.value = ''
     // Navigate to the pending route
     router.push(pendingNavigation.value)
   }
@@ -125,55 +173,100 @@ onBeforeMount(async (): Promise<void> => {
     loading.value = false
   }
 })
+
+// Watch for changes in tasks array for debugging
+watch(tasks, (newTasks) => {
+  console.log('Tasks array changed:', newTasks.map(t => ({ id: t.id, progress: t.progress })))
+  console.log('Full tasks array:', newTasks)
+}, { deep: true })
 </script>
 
 <template>
-  <div class="container">
-    <h1>Task Management</h1>
-    
-    <form @submit.prevent="addTask" class="mb-6">
-      <label for="newTask" class="block text-sm font-medium text-gray-700 mb-2">Add New Task</label>
-      <div class="flex gap-2">
-        <input 
-          type="text" 
-          id="newTask" 
-          name="newTask" 
-          v-model="newTask"
-          placeholder="Enter task description..."
-          class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
-        <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-          Add Task
-        </button>
-      </div>
-    </form>
-
-    <div v-if="loading" class="text-center py-8">
-      <p class="text-gray-600">Loading tasks...</p>
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Task Management</h1>
+      <Button
+        variant="primary"
+        size="lg"
+        @click="showAddModal = true"
+        class="flex items-center space-x-2"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Add New Task</span>
+      </Button>
     </div>
+
+    <!-- Task Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div class="text-2xl font-bold text-blue-600">{{ tasks.filter(t => t.status === 'pending').length }}</div>
+        <div class="text-sm text-gray-600">Pending</div>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div class="text-2xl font-bold text-yellow-600">{{ tasks.filter(t => t.status === 'in_progress').length }}</div>
+        <div class="text-sm text-gray-600">In Progress</div>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div class="text-2xl font-bold text-green-600">{{ tasks.filter(t => t.status === 'completed').length }}</div>
+        <div class="text-sm text-gray-600">Completed</div>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div class="text-2xl font-bold text-gray-600">{{ tasks.length }}</div>
+        <div class="text-sm text-gray-600">Total Tasks</div>
+      </div>
+    </div>
+
+    <LoadingSpinner v-if="loading" text="Loading tasks..." />
 
     <div v-else>
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Your Tasks</h2>
-      
-      <ul v-if="tasks.length > 0" class="space-y-3">
-        <li v-for="task in tasks" @click="navigateToTaskDetails(task.id)" :key="task.id" class="flex gap-2 items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
-          <span class="text-gray-800">{{ task.name }}</span>
-          <button 
-            @click.stop="deleteTask(task.id)"
-            class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-md transition-colors"
-            title="Delete task"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-          </button>
-        </li>
-      </ul>
-      
-      <div v-else class="text-center py-8 text-gray-500">
-        <p>No tasks yet. Add your first task above!</p>
+      <div v-if="tasks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <TaskCard
+          v-for="task in tasks"
+          :key="`${task.id}-${task.progress}-${task.updatedAt}`"
+          :task="task"
+          @edit="editTask"
+          @delete="deleteTask"
+          @view="navigateToTaskDetails"
+        />
       </div>
+      
+      <EmptyState
+        v-else
+        title="No tasks"
+        description="Get started by creating a new task."
+      >
+        <template #action>
+          <Button
+            variant="primary"
+            @click="showAddModal = true"
+            class="inline-flex items-center"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            New Task
+          </Button>
+        </template>
+      </EmptyState>
     </div>
+
+    <!-- Task Edit Modal -->
+    <TaskEditModal
+      :is-open="showEditModal"
+      :task="editingTask"
+      @close="showEditModal = false"
+      @save="updateTask"
+    />
+
+    <!-- Task Add Modal -->
+    <TaskEditModal
+      :is-open="showAddModal"
+      :task="null"
+      @close="showAddModal = false"
+      @save="addNewTask"
+    />
 
     <!-- Custom Confirmation Dialog -->
     <ConfirmationDialog

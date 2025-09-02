@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum TaskStatus {
   PENDING = 'pending',
@@ -41,6 +47,21 @@ export class Task {
 
   @Column({ type: 'timestamp', nullable: true })
   dueDate: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  estimatedHours: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  timeSpent: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  startedAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  completedAt: Date;
+
+  @Column({ type: 'int', default: 0 })
+  progress: number; // 0-100 percentage
 
   @CreateDateColumn()
   createdAt: Date;
