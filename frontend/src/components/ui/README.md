@@ -153,6 +153,57 @@ An empty state component for when there's no data to display.
 **Slots:**
 - `action`: Optional action button or content
 
+### ErrorState
+A reusable error state component for displaying errors, warnings, and info messages.
+
+```vue
+<ErrorState
+  variant="error"
+  title="Error Loading Data"
+  message="Failed to fetch data from the server"
+>
+  <template #action>
+    <Button @click="retry">Try Again</Button>
+  </template>
+</ErrorState>
+```
+
+**Props:**
+- `title`: string (required) - Error title
+- `message`: string (required) - Error message
+- `variant`: 'error' | 'warning' | 'info' (optional, defaults to 'error')
+
+**Slots:**
+- `action`: Optional action button or content
+
+### StatCard
+A reusable statistics card component for displaying metrics and numbers.
+
+```vue
+<StatCard
+  value="42"
+  label="Active Users"
+  color="blue"
+/>
+```
+
+**Props:**
+- `value`: number | string (required) - The statistic value to display
+- `label`: string (required) - The label for the statistic
+- `color`: 'blue' | 'yellow' | 'green' | 'gray' | 'red' | 'orange' (optional, defaults to 'gray')
+
+**Usage Examples:**
+```vue
+<!-- Basic usage -->
+<StatCard value="15" label="Pending Tasks" />
+
+<!-- With custom color -->
+<StatCard value="8" label="Completed" color="green" />
+
+<!-- Dynamic values -->
+<StatCard :value="userCount" label="Total Users" color="blue" />
+```
+
 ### PageLayout
 A reusable page layout component that provides consistent structure and spacing.
 

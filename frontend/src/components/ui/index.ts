@@ -8,6 +8,8 @@ export { default as FormSelect } from './FormSelect.vue'
 export { default as FormTextarea } from './FormTextarea.vue'
 export { default as LoadingSpinner } from './LoadingSpinner.vue'
 export { default as EmptyState } from './EmptyState.vue'
+export { default as ErrorState } from './ErrorState.vue'
+export { default as StatCard } from './StatCard.vue'
 
 // Layout Components
 export { default as PageLayout } from '../layout/PageLayout.vue'

@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { ref, onBeforeMount, watch, nextTick } from 'vue'
+import { ref, onBeforeMount, watch, nextTick, computed } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import ConfirmationDialog from '@/components/ConfirmationDialog.vue'
 import TaskEditModal from '@/components/TaskEditModal.vue'
 import TaskCard from '@/components/TaskCard.vue'
-import { Button, LoadingSpinner, EmptyState, PageLayout } from '@/components/ui'
+import { Button, LoadingSpinner, EmptyState, PageLayout, ErrorState, StatCard } from '@/components/ui'
 import { API_URLS } from '@/config/api'
 import type { Task } from '@/types/task'
 
 const router = useRouter()
 const tasks = ref<Task[]>([])
 const loading = ref<boolean>(true)
+const error = ref<string | null>(null)
 const showConfirmDialog = ref(false)
 const pendingNavigation = ref<string | null>(null)
 const allowNavigation = ref<boolean>(false)
@@ -162,13 +163,67 @@ const cancelNavigation = (): void => {
   allowNavigation.value = false
 }
 
-onBeforeMount(async (): Promise<void> => {
+const retryFetchTasks = async (): Promise<void> => {
   try {
+    loading.value = true
+    error.value = null
+    
     const response = await fetch(API_URLS.TASKS.LIST)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch tasks (${response.status})`)
+    }
+    
     const data = await response.json()
     tasks.value = data
-  } catch (error) {
-    console.error('Error fetching tasks:', error)
+  } catch (err) {
+    console.error('Error fetching tasks:', err)
+    error.value = err instanceof Error ? err.message : 'Failed to fetch tasks'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Task statistics configuration
+const taskStats = computed(() => [
+  {
+    value: tasks.value.filter(t => t.status === 'pending').length,
+    label: 'Pending',
+    color: 'blue' as const
+  },
+  {
+    value: tasks.value.filter(t => t.status === 'in_progress').length,
+    label: 'In Progress',
+    color: 'yellow' as const
+  },
+  {
+    value: tasks.value.filter(t => t.status === 'completed').length,
+    label: 'Completed',
+    color: 'green' as const
+  },
+  {
+    value: tasks.value.length,
+    label: 'Total Tasks',
+    color: 'gray' as const
+  }
+])
+
+onBeforeMount(async (): Promise<void> => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    const response = await fetch(API_URLS.TASKS.LIST)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch tasks (${response.status})`)
+    }
+    
+    const data = await response.json()
+    tasks.value = data
+  } catch (err) {
+    console.error('Error fetching tasks:', err)
+    error.value = err instanceof Error ? err.message : 'Failed to fetch tasks'
   } finally {
     loading.value = false
   }
@@ -199,25 +254,28 @@ watch(tasks, (newTasks) => {
 
     <!-- Task Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div class="text-2xl font-bold text-blue-600">{{ tasks.filter(t => t.status === 'pending').length }}</div>
-        <div class="text-sm text-gray-600">Pending</div>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div class="text-2xl font-bold text-yellow-600">{{ tasks.filter(t => t.status === 'in_progress').length }}</div>
-        <div class="text-sm text-gray-600">In Progress</div>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div class="text-2xl font-bold text-green-600">{{ tasks.filter(t => t.status === 'completed').length }}</div>
-        <div class="text-sm text-gray-600">Completed</div>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div class="text-2xl font-bold text-gray-600">{{ tasks.length }}</div>
-        <div class="text-sm text-gray-600">Total Tasks</div>
-      </div>
+      <StatCard
+        v-for="stat in taskStats"
+        :key="stat.label"
+        :value="stat.value"
+        :label="stat.label"
+        :color="stat.color"
+      />
     </div>
 
     <LoadingSpinner v-if="loading" text="Loading tasks..." />
+
+    <!-- Error State -->
+    <ErrorState
+      v-else-if="error"
+      variant="error"
+      title="Failed to Load Tasks"
+      :message="error"
+    >
+      <template #action>
+        <Button variant="primary" @click="retryFetchTasks">Try Again</Button>
+      </template>
+    </ErrorState>
 
     <div v-else>
       <div v-if="tasks.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
