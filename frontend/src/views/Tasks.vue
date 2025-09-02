@@ -4,7 +4,7 @@ import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import ConfirmationDialog from '@/components/ConfirmationDialog.vue'
 import TaskEditModal from '@/components/TaskEditModal.vue'
 import TaskCard from '@/components/TaskCard.vue'
-import { Button, LoadingSpinner, EmptyState } from '@/components/ui'
+import { Button, LoadingSpinner, EmptyState, PageLayout } from '@/components/ui'
 import { API_URLS } from '@/config/api'
 import type { Task } from '@/types/task'
 
@@ -182,9 +182,8 @@ watch(tasks, (newTasks) => {
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Task Management</h1>
+  <PageLayout title="Task Management">
+    <template #header-actions>
       <Button
         variant="primary"
         size="lg"
@@ -196,7 +195,7 @@ watch(tasks, (newTasks) => {
         </svg>
         <span>Add New Task</span>
       </Button>
-    </div>
+    </template>
 
     <!-- Task Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -279,7 +278,7 @@ watch(tasks, (newTasks) => {
       @confirm="confirmNavigation"
       @cancel="cancelNavigation"
     />
-  </div>
+  </PageLayout>
 </template>
 
 

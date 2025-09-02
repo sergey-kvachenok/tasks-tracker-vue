@@ -153,6 +153,35 @@ An empty state component for when there's no data to display.
 **Slots:**
 - `action`: Optional action button or content
 
+### PageLayout
+A reusable page layout component that provides consistent structure and spacing.
+
+```vue
+<PageLayout 
+  title="Page Title"
+  subtitle="Optional page subtitle"
+>
+  <template #header-actions>
+    <Button variant="primary">Action</Button>
+  </template>
+  
+  <!-- Page content goes here -->
+  
+  <template #page-actions>
+    <Button variant="secondary">Bottom Action</Button>
+  </template>
+</PageLayout>
+```
+
+**Props:**
+- `title`: string (required) - Page title displayed as H1
+- `subtitle`: string (optional) - Page subtitle displayed below title
+
+**Slots:**
+- `default`: Page content
+- `header-actions`: Optional actions displayed in the header (right side)
+- `page-actions`: Optional actions displayed at the bottom of the page
+
 ## Usage
 
 Import components individually or use the index file:

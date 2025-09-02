@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { PageLayout } from '@/components/ui'
 
 interface Task {
   id: number
@@ -34,9 +35,7 @@ onMounted(async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="container">
-    <h1>Task Details</h1>
-    
+  <PageLayout title="Task Details">
     <div v-if="task" class="bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">{{ task.title }}</h2>
       <div class="space-y-3">
@@ -58,5 +57,5 @@ onMounted(async (): Promise<void> => {
     <div v-else class="text-center py-8">
       <p class="text-gray-500">Loading task details...</p>
     </div>
-  </div>
+  </PageLayout>
 </template>

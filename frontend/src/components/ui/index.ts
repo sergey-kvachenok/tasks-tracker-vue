@@ -9,6 +9,9 @@ export { default as FormTextarea } from './FormTextarea.vue'
 export { default as LoadingSpinner } from './LoadingSpinner.vue'
 export { default as EmptyState } from './EmptyState.vue'
 
+// Layout Components
+export { default as PageLayout } from '../layout/PageLayout.vue'
+
 // Types
 export type { Task, TaskStatus, TaskPriority, CreateTaskDto, UpdateTaskDto } from '@/types/task'
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
 import { computed } from 'vue'
+import { PageLayout } from '@/components/ui'
 
 const route = useRoute()
 
@@ -15,9 +16,7 @@ const tabs = [
 </script>
 
 <template>
-  <div class="container">
-    <h1>About TaskMaster</h1>
-    
+  <PageLayout title="About TaskMaster">
     <div class="prose max-w-none">
       <p class="text-lg text-gray-700 mb-6">
         TaskMaster is a modern, intuitive task management application built with Vue.js and Tailwind CSS.
@@ -54,5 +53,5 @@ const tabs = [
         </p>
       </div>
     </div>
-  </div>
+  </PageLayout>
 </template>
