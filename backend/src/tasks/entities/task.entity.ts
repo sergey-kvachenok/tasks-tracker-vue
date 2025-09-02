@@ -48,17 +48,17 @@ export class Task {
   @Column({ type: 'timestamp', nullable: true })
   dueDate: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
-  estimatedHours: Date;
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  estimatedHours: number;
 
-  @Column({ type: 'timestamp', nullable: true })
-  timeSpent: Date;
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  timeSpent: number;
 
   @Column({ type: 'timestamp', nullable: true })
   startedAt: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  completedAt: Date;
+  completedAt: Date | null;
 
   @Column({ type: 'int', default: 0 })
   progress: number; // 0-100 percentage

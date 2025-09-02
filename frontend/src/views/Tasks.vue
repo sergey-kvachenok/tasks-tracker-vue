@@ -108,8 +108,9 @@ const addNewTask = async (taskData: Partial<Task>): Promise<void> => {
     })
     
     if (response.ok) {
-      const newTaskData = await response.json()
-      tasks.value.unshift(newTaskData)
+      const newTask = await response.json()
+      tasks.value.push(newTask)
+      showAddModal.value = false
     } else {
       console.error('Failed to create task')
     }
@@ -118,8 +119,8 @@ const addNewTask = async (taskData: Partial<Task>): Promise<void> => {
   }
 }
 
-const navigateToTaskDetails = (id: number): void => {
-  router.push(`/tasks/${id}`)
+const navigateToTaskDetails = (taskId: number): void => {
+  router.push(`/tasks/${taskId}`)
 }
 
 // Check if there are unsaved changes
@@ -127,40 +128,23 @@ const hasUnsavedChanges = (): boolean => {
   return false // No more simple input field, all changes go through modals
 }
 
-onBeforeRouteLeave((to, from) => {
-  // If we've already confirmed navigation, allow it
-  if (allowNavigation.value) {
-    return true
-  }
-  
-  // Only show confirmation if there are unsaved changes
-  if (hasUnsavedChanges()) {
-    showConfirmDialog.value = true
-    pendingNavigation.value = to.path
-    
-    // Return false to prevent immediate navigation
-    return false
-  }
-  
-  // No changes, allow navigation
-  return true
+// Route guard for unsaved changes
+onBeforeRouteLeave((to, from, next) => {
+  // For now, always allow navigation
+  // You can add logic here to check for unsaved changes
+  next()
 })
 
 const confirmNavigation = (): void => {
-  showConfirmDialog.value = false
   allowNavigation.value = true
-  
   if (pendingNavigation.value) {
-    // Navigate to the pending route
     router.push(pendingNavigation.value)
   }
-  pendingNavigation.value = null
 }
 
 const cancelNavigation = (): void => {
   showConfirmDialog.value = false
   pendingNavigation.value = null
-  allowNavigation.value = false
 }
 
 const retryFetchTasks = async (): Promise<void> => {

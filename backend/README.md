@@ -206,7 +206,7 @@ docker exec -it taskmaster_postgres psql -U taskmaster_user -d taskmaster
 If port 3001 is already in use, change the PORT in your `.env` file:
 
 ```env
-PORT=3002
+PORT=3001
 ```
 
 ### Database Connection Issues

@@ -32,12 +32,14 @@ export class CreateTaskDto {
   dueDate?: string;
 
   @IsOptional()
-  @IsDateString()
-  estimatedHours?: string;
+  @IsNumber()
+  @Min(0)
+  estimatedHours?: number;
 
   @IsOptional()
-  @IsDateString()
-  timeSpent?: string;
+  @IsNumber()
+  @Min(0)
+  timeSpent?: number;
 
   @IsOptional()
   @IsNumber()

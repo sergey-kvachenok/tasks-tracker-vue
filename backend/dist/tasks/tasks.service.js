@@ -42,6 +42,7 @@ let TasksService = class TasksService {
     }
     async update(id, updateTaskDto) {
         const task = await this.findOne(id);
+        const originalStatus = task.status;
         if (updateTaskDto.name !== undefined)
             task.name = updateTaskDto.name;
         if (updateTaskDto.description !== undefined)
@@ -52,6 +53,26 @@ let TasksService = class TasksService {
             task.priority = updateTaskDto.priority;
         if (updateTaskDto.progress !== undefined) {
             task.progress = Math.max(0, Math.min(100, updateTaskDto.progress));
+        }
+        if (updateTaskDto.dueDate !== undefined) {
+            task.dueDate = new Date(updateTaskDto.dueDate);
+        }
+        if (updateTaskDto.estimatedHours !== undefined) {
+            task.estimatedHours = updateTaskDto.estimatedHours;
+        }
+        if (updateTaskDto.timeSpent !== undefined) {
+            task.timeSpent = updateTaskDto.timeSpent;
+        }
+        if (updateTaskDto.status && updateTaskDto.status !== originalStatus) {
+            if (updateTaskDto.status === 'in_progress' && !task.startedAt) {
+                task.startedAt = new Date();
+            }
+            if (updateTaskDto.status === 'completed') {
+                task.completedAt = new Date();
+            }
+            else {
+                task.completedAt = null;
+            }
         }
         return await this.tasksRepository.save(task);
     }

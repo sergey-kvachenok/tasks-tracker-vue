@@ -1,0 +1,74 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: taskmaster_postgres_prod
+    environment:
+      POSTGRES_DB: taskmaster
+      POSTGRES_USER: taskmaster_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskmaster_user -d taskmaster"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NestJS Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: taskmaster_backend_prod
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_USERNAME: taskmaster_user
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: taskmaster
+      PORT: ${BACKEND_PORT:-3001}
+    ports:
+      - "${BACKEND_PORT:-3001}:${BACKEND_PORT:-3001}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT:-3001}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vue.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost:${BACKEND_PORT:-3001}
+    container_name: taskmaster_frontend_prod
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+    environment:
+      - VITE_API_BASE_URL=http://localhost:${BACKEND_PORT:-3001}
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

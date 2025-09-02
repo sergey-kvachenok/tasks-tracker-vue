@@ -74,12 +74,12 @@ __decorate([
     __metadata("design:type", Date)
 ], Task.prototype, "dueDate", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
-    __metadata("design:type", Date)
+    (0, typeorm_1.Column)({ type: 'decimal', precision: 5, scale: 2, nullable: true }),
+    __metadata("design:type", Number)
 ], Task.prototype, "estimatedHours", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
-    __metadata("design:type", Date)
+    (0, typeorm_1.Column)({ type: 'decimal', precision: 5, scale: 2, nullable: true }),
+    __metadata("design:type", Number)
 ], Task.prototype, "timeSpent", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
@@ -87,7 +87,7 @@ __decorate([
 ], Task.prototype, "startedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
-    __metadata("design:type", Date)
+    __metadata("design:type", Object)
 ], Task.prototype, "completedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'int', default: 0 }),
