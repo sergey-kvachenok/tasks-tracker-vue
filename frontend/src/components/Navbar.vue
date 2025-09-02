@@ -46,7 +46,7 @@ const navigationLinks: NavigationLink[] = [
           <RouterLink
             v-for="link in navigationLinks" 
             :key="link.path"
-            to="link.path" 
+            :to="link.path" 
             class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
             :class="[
               isActiveLink(link.path) 
