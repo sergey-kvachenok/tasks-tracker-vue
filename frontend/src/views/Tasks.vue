@@ -2,10 +2,17 @@
 import { ref, onBeforeMount } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import ConfirmationDialog from '@/components/ConfirmationDialog.vue'
+import { API_URLS } from '@/config/api'
 
 interface Task {
   id: number
   name: string
+  description?: string
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  dueDate?: string
+  createdAt: string
+  updatedAt: string
 }
 
 const router = useRouter()
@@ -16,19 +23,48 @@ const showConfirmDialog = ref(false)
 const pendingNavigation = ref<string | null>(null)
 const allowNavigation = ref<boolean>(false)
 
-const addTask = (): void => {
+const addTask = async (): Promise<void> => {
   if (newTask.value.trim()) {
-    const task: Task = {
-      id: Date.now(),
-      name: newTask.value.trim()
+    try {
+      const response = await fetch(API_URLS.TASKS.CREATE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newTask.value.trim(),
+          status: 'pending',
+          priority: 'medium'
+        })
+      })
+      
+      if (response.ok) {
+        const newTaskData = await response.json()
+        tasks.value.unshift(newTaskData) // Add to beginning of list
+        newTask.value = ''
+      } else {
+        console.error('Failed to create task')
+      }
+    } catch (error) {
+      console.error('Error creating task:', error)
     }
-    tasks.value.push(task)
-    newTask.value = ''
   }
 }
 
-const deleteTask = (id: number): void => {
-  tasks.value = tasks.value.filter(task => task.id !== id)
+const deleteTask = async (id: number): Promise<void> => {
+  try {
+    const response = await fetch(API_URLS.TASKS.DELETE(id), {
+      method: 'DELETE'
+    })
+    
+    if (response.ok) {
+      tasks.value = tasks.value.filter(task => task.id !== id)
+    } else {
+      console.error('Failed to delete task')
+    }
+  } catch (error) {
+    console.error('Error deleting task:', error)
+  }
 }
 
 const navigateToTaskDetails = (id: number): void => {
@@ -80,12 +116,9 @@ const cancelNavigation = (): void => {
 
 onBeforeMount(async (): Promise<void> => {
   try {
-    const response = await fetch('https://jsonplaceholder.typicode.com/todos')
+    const response = await fetch(API_URLS.TASKS.LIST)
     const data = await response.json()
-    tasks.value = data.map((task: any) => ({
-      name: task.title,
-      id: task.id
-    }))
+    tasks.value = data
   } catch (error) {
     console.error('Error fetching tasks:', error)
   } finally {
